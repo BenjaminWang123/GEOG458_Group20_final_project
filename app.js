@@ -1,3 +1,4 @@
+
 /* =========================================================
    GEOG458 — Intensity Dashboard Starter (Wide GeoJSON)
    - Uses joined data: geometry + dc_YYYY_MM columns
@@ -48,6 +49,7 @@ const legendDiv = document.getElementById("legend");
 
 
 // ===== 3) MAP INIT =====
+const MAPBOX_TOKEN = "YOUR_MAPBOX_TOKEN"
 mapboxgl.accessToken = MAPBOX_TOKEN;
 const map = new mapboxgl.Map({
   container: "map",
