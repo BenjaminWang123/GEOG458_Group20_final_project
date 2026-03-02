@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GEOG458 — Intensity Dashboard (King County)</title>
+
+  <!-- Mapbox GL JS (basemap + map rendering) -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+  <!-- D3 (utilities + formatting) -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <!-- C3 (chart library) + dependency D3 v5 (C3 expects d3 v5) -->
+  <!-- NOTE: this is separate from D3 v7 above. It's okay because C3 bundles work with d3 v5. -->
+  <link rel="stylesheet" href="https://unpkg.com/c3@0.7.20/c3.min.css" />
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://unpkg.com/c3@0.7.20/c3.min.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- Main layout: map left, control panel right -->
+  <div id="app">
+    <div id="map"></div>
+
+    <aside id="panel">
+      <h1>Intensity Dashboard</h1>
+      <p class="sub">
+        Choropleth maps <b>DEVICE_COUNTS</b> by King County Census Block Group.
+        Use the time controls and click a block group to see its trend.
+      </p>
+
+      <!-- Time controls -->
+      <section class="card">
+        <h2>Time</h2>
+
+        <!-- Dropdown for Year -->
+        <label class="label">Year</label>
+        <select id="yearSelect"></select>
+
+        <!-- Dropdown for Month -->
+        <label class="label">Month</label>
+        <select id="monthSelect"></select>
+
+        <!-- Slider for all YYYY-MM (optional but nice) -->
+        <label class="label">Time slider (YYYY-MM)</label>
+        <input id="timeSlider" type="range" min="0" max="0" step="1" value="0" />
+        <div id="timeLabel" class="small"></div>
+
+        <!-- Play / Pause animation -->
+        <div class="row">
+          <button id="playBtn">Play</button>
+          <button id="pauseBtn" disabled>Pause</button>
+        </div>
+
+        <!-- Toggle layer -->
+        <label class="row small">
+          <input type="checkbox" id="layerToggle" checked />
+          Show intensity layer
+        </label>
+      </section>
+
+      <!-- Info about clicked polygon -->
+      <section class="card">
+        <h2>Selected Block Group</h2>
+        <div id="selectedBox" class="selected">
+          <div class="small muted">No selection yet. Click a block group on the map.</div>
+        </div>
+      </section>
+
+      <!-- Chart -->
+      <section class="card">
+        <h2>Selected CBG Intensity Over Time</h2>
+        <div id="chart"></div>
+      </section>
+
+      <!-- Legend -->
+      <section class="card">
+        <h2>Legend</h2>
+        <div id="legend"></div>
+      </section>
+
+      <footer class="small muted">
+        GEOG458 final project starter. Data: Advan / Neighborhood Patterns Plus (CBG).
+      </footer>
+    </aside>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
