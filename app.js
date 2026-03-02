@@ -49,8 +49,7 @@ const legendDiv = document.getElementById("legend");
 
 
 // ===== 3) MAP INIT =====
-const MAPBOX_TOKEN = "YOUR_MAPBOX_TOKEN"
-mapboxgl.accessToken = MAPBOX_TOKEN;
+mapboxgl.accessToken = "";
 const map = new mapboxgl.Map({
   container: "map",
   style: MAP_STYLE,
