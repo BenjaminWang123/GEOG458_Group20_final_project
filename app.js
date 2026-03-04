@@ -49,7 +49,7 @@ const legendDiv = document.getElementById("legend");
 
 
 // ===== 3) MAP INIT =====
-mapboxgl.accessToken = "";
+mapboxgl.accessToken = "pk.eyJ1IjoiYmVubmk2NjYiLCJhIjoiY21tOHo4eTJoMDBxdDJycTF4cmNuMXo2YSJ9.nJJ5_D3dOefc7feityDgDQ";
 const map = new mapboxgl.Map({
   container: "map",
   style: MAP_STYLE,
