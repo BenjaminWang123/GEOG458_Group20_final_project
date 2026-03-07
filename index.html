@@ -1,93 +1,178 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>GEOG458 — Intensity Dashboard (King County)</title>
-
-  <!-- Mapbox GL JS (basemap + map rendering) -->
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-
-  <!-- D3 (utilities + formatting) -->
-  <script src="https://d3js.org/d3.v7.min.js"></script>
-
-  <!-- C3 (chart library) + dependency D3 v5 (C3 expects d3 v5) -->
-  <!-- NOTE: this is separate from D3 v7 above. It's okay because C3 bundles work with d3 v5. -->
-  <link rel="stylesheet" href="https://unpkg.com/c3@0.7.20/c3.min.css" />
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <script src="https://unpkg.com/c3@0.7.20/c3.min.js"></script>
-
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commercial Foot Traffic Dashboard | GEOG458 Group 20</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
-  <!-- Main layout: map left, control panel right -->
-  <div id="app">
-    <div id="map"></div>
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <div class="brand">
+        <span class="brand-badge">GEOG458</span>
+        <span class="brand-text">Group 20 Final Project</span>
+      </div>
 
-    <aside id="panel">
-      <h1>Intensity Dashboard</h1>
-      <p class="sub">
-        Choropleth maps <b>DEVICE_COUNTS</b> by King County Census Block Group.
-        Use the time controls and click a block group to see its trend.
-      </p>
+      <nav class="main-nav">
+        <a href="index.html" class="nav-link active">Home</a>
+        <a href="pages/intensity.html" class="nav-link">Intensity</a>
+        <a href="pages/temporal.html" class="nav-link">Temporal</a>
+        <a href="pages/category.html" class="nav-link">Category</a>
+        <a href="pages/flow.html" class="nav-link">Flow</a>
+      </nav>
+    </div>
+  </header>
 
-      <!-- Time controls -->
-      <section class="card">
-        <h2>Time</h2>
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-text">
+          <p class="eyebrow">Urban Mobility · Commercial Geography · Spatial Analysis</p>
+          <h1>Commercial Foot Traffic in Urban Space</h1>
+          <p class="hero-description">
+            This project explores how people move through commercial areas across space and time.
+            By examining foot traffic intensity, temporal rhythms, brand and category distributions,
+            and visitor flows, we aim to better understand patterns of urban activity and everyday mobility.
+          </p>
 
-        <!-- Dropdown for Year -->
-        <label class="label">Year</label>
-        <select id="yearSelect"></select>
-
-        <!-- Dropdown for Month -->
-        <label class="label">Month</label>
-        <select id="monthSelect"></select>
-
-        <!-- Slider for all YYYY-MM (optional but nice) -->
-        <label class="label">Time slider (YYYY-MM)</label>
-        <input id="timeSlider" type="range" min="0" max="0" step="1" value="0" />
-        <div id="timeLabel" class="small"></div>
-
-        <!-- Play / Pause animation -->
-        <div class="row">
-          <button id="playBtn">Play</button>
-          <button id="pauseBtn" disabled>Pause</button>
+          <div class="hero-actions">
+            <a href="#project-overview" class="btn btn-primary">Explore Project</a>
+            <a href="#map-section" class="btn btn-secondary">View Pages</a>
+          </div>
         </div>
 
-        <!-- Toggle layer -->
-        <label class="row small">
-          <input type="checkbox" id="layerToggle" checked />
-          Show intensity layer
-        </label>
-      </section>
-
-      <!-- Info about clicked polygon -->
-      <section class="card">
-        <h2>Selected Block Group</h2>
-        <div id="selectedBox" class="selected">
-          <div class="small muted">No selection yet. Click a block group on the map.</div>
+        <div class="hero-panel glass-card">
+          <div class="panel-label">Project Structure</div>
+          <div class="panel-stat-grid">
+            <div class="stat-card">
+              <h3>4</h3>
+              <p>Thematic Pages</p>
+            </div>
+            <div class="stat-card">
+              <h3>1</h3>
+              <p>Introduction Page</p>
+            </div>
+            <div class="stat-card">
+              <h3>Multi</h3>
+              <p>Data Sources</p>
+            </div>
+            <div class="stat-card">
+              <h3>Story</h3>
+              <p>Driven Layout</p>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
+      <div class="hero-glow hero-glow-1"></div>
+      <div class="hero-glow hero-glow-2"></div>
+    </section>
 
-      <!-- Chart -->
-      <section class="card">
-        <h2>Selected CBG Intensity Over Time</h2>
-        <div id="chart"></div>
-      </section>
+    <section id="project-overview" class="section">
+      <div class="container two-column">
+        <div>
+          <p class="section-tag">01 · Project Overview</p>
+          <h2>Why this project matters</h2>
+        </div>
+        <div>
+          <p>
+            Commercial districts are shaped by uneven patterns of movement, attraction, and visitation.
+            Looking only at static locations does not fully explain how urban commercial life functions.
+            This project uses spatial and temporal data to reveal where activity concentrates, when it changes,
+            what types of places attract visitors, and how people move between places.
+          </p>
+          <p>
+            The website is designed as an interactive story platform: each page focuses on one theme while
+            maintaining a consistent visual structure for comparison and exploration.
+          </p>
+        </div>
+      </div>
+    </section>
 
-      <!-- Legend -->
-      <section class="card">
-        <h2>Legend</h2>
-        <div id="legend"></div>
-      </section>
+    <section class="section section-alt">
+      <div class="container">
+        <p class="section-tag">02 · Data and References</p>
+        <h2>Data sources</h2>
 
-      <footer class="small muted">
-        GEOG458 final project starter. Data: Advan / Neighborhood Patterns Plus (CBG).
-      </footer>
-    </aside>
-  </div>
-  <script src="app.js"></script>
+        <div class="source-grid">
+          <article class="glass-card source-card">
+            <h3>POI Data</h3>
+            <p>Used to represent commercial locations and their spatial distribution.</p>
+          </article>
+
+          <article class="glass-card source-card">
+            <h3>Foot Traffic Data</h3>
+            <p>Used to estimate visitation intensity and identify commercial hotspots.</p>
+          </article>
+
+          <article class="glass-card source-card">
+            <h3>Temporal Patterns</h3>
+            <p>Used to compare weekday/weekend and daily or monthly variation.</p>
+          </article>
+
+          <article class="glass-card source-card">
+            <h3>Brand / Category Information</h3>
+            <p>Used to understand the composition of commercial activities.</p>
+          </article>
+
+          <article class="glass-card source-card">
+            <h3>Flow Data</h3>
+            <p>Used to reveal visitor movement between neighborhoods or destinations.</p>
+          </article>
+
+          <article class="glass-card source-card">
+            <h3>References</h3>
+            <p>Add your final citations, data providers, and project acknowledgements here.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="map-section" class="section">
+      <div class="container">
+        <p class="section-tag">03 · Explore the Dashboard</p>
+        <h2>Map pages</h2>
+
+        <div class="page-card-grid">
+          <a href="pages/intensity.html" class="page-card">
+            <span class="page-number">01</span>
+            <h3>Foot Traffic Intensity</h3>
+            <p>Explore the spatial concentration of activity across commercial locations.</p>
+            <span class="card-arrow">→</span>
+          </a>
+
+          <a href="pages/temporal.html" class="page-card">
+            <span class="page-number">02</span>
+            <h3>Temporal Patterns</h3>
+            <p>Examine how visitation changes across time and compare patterns.</p>
+            <span class="card-arrow">→</span>
+          </a>
+
+          <a href="pages/category.html" class="page-card">
+            <span class="page-number">03</span>
+            <h3>Brand & Category</h3>
+            <p>Understand commercial composition and category distributions.</p>
+            <span class="card-arrow">→</span>
+          </a>
+
+          <a href="pages/flow.html" class="page-card">
+            <span class="page-number">04</span>
+            <h3>Visitor Flows</h3>
+            <p>Reveal movement patterns between places and urban destinations.</p>
+            <span class="card-arrow">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-content">
+      <p>GEOG458 Group 20 Final Project</p>
+      <p>Template layout only · Maps and charts will be added later</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
 </body>
 </html>
