@@ -3,39 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Brand & Category</title>
+  <title>Temporal Patterns</title>
 
   <link rel="stylesheet" href="../css/style.css" />
-  <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.css" rel="stylesheet" />
+
 </head>
 <body>
-  <div id="app"></div>
 
-  <script src="../js/main.js"></script>
-  <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="../js/category.js"></script>
+<div id="app"></div>
 
-  <script>
-    renderMapPage("app", {
-      currentPage: "category",
-      pageNumber: "03",
-      title: "Brand & Category",
-      subtitle: "This page explores destination categories from the flow dataset.",
-      description:
-        "This page groups destination brands by top category and lets users explore which brands fall into each commercial category.",
-      insights: [
-        "Compare major destination categories",
-        "Explore brands within each category"
-      ],
-      toolbar: ["Category", "Brands", "Summary"],
-      mapId: "category-map",
-      panelTitle: "Category Dashboard",
-      chartId: "category-chart"
-    });
+<script src="../js/main.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="../js/temporal.js"></script>
 
-    initCategoryTemplate();
-  </script>
+<script>
+
+renderMapPage("app", {
+  currentPage: "temporal",
+  pageNumber: "02",
+  title: "Temporal Patterns",
+  subtitle: "Explore how commercial activity changes across time.",
+  description:
+    "Use the slider to navigate monthly patterns and explore how commercial activity has changed over time",
+  insights: [
+    "Observe monthly activity changes",
+    "Track activity trends across years",
+    "Identify peak activity areas"
+  ],
+  toolbar: ["Time", "Patterns", "Legend"],
+  mapId: "temporal-map",
+  panelTitle: "Temporal Dashboard",
+  chartId: "temporal-chart"
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  initTemporalTemplate();
+});
+
+</script>
+
 </body>
 </html>
