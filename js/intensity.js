@@ -9,6 +9,7 @@
   2. Keep visible circles styled separately from clickable area
   3. Highlight the selected point after click
   4. Keep heatmap / points / hitbox filters synced
+  5. Connect map clicks to IntensityChart dashboard
 */
 
 function initIntensityTemplate() {
@@ -33,7 +34,6 @@ function initIntensityTemplate() {
     return;
   }
 
-  // Replace with your real public token
   mapboxgl.accessToken = "pk.eyJ1IjoiYmVubmk2NjYiLCJhIjoiY21tOHo4eTJoMDBxdDJycTF4cmNuMXo2YSJ9.nJJ5_D3dOefc7feityDgDQ";
 
   const controlWrap = document.createElement("div");
@@ -190,6 +190,29 @@ function initIntensityTemplate() {
   let selectedFeatureId = null;
   let activePopup = null;
 
+  function getBrandValue(props) {
+    return props.brand || props.BRAND || "Unknown brand";
+  }
+
+  function getLocationValue(props) {
+    return props.location_name || props.LOCATION_NAME || "Unknown location";
+  }
+
+  function getVisitCountsValue(props) {
+    const value = Number(
+      props.visit_counts ??
+      props.VISIT_COUNTS ??
+      props.visits ??
+      props.VISITS ??
+      0
+    );
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  function getYearValue(props) {
+    return props.year ?? props.YEAR ?? "Unknown";
+  }
+
   map.on("load", () => {
     fetch("../data/seattle_agg_2024_2026_full_clean.geojson")
       .then((response) => {
@@ -201,12 +224,16 @@ function initIntensityTemplate() {
       .then((data) => {
         console.log("GeoJSON loaded successfully:", data.features.length, "features");
 
-        // Give every feature a stable id for feature-state highlighting
         data.features.forEach((feature, index) => {
           if (feature.id === undefined || feature.id === null) {
             feature.id = index;
           }
         });
+
+        if (window.IntensityChart) {
+          window.IntensityChart.setData(data.features);
+          window.IntensityChart.setYearFilter(currentYear);
+        }
 
         map.addSource("foot-traffic", {
           type: "geojson",
@@ -256,7 +283,6 @@ function initIntensityTemplate() {
           }
         });
 
-        // Visible points
         map.addLayer({
           id: "foot-traffic-points",
           type: "circle",
@@ -293,7 +319,6 @@ function initIntensityTemplate() {
           }
         });
 
-        // Invisible larger hitbox layer
         map.addLayer({
           id: "foot-traffic-hitbox",
           type: "circle",
@@ -352,13 +377,34 @@ function initIntensityTemplate() {
             activePopup.remove();
             activePopup = null;
           }
+
+          if (window.IntensityChart) {
+            window.IntensityChart.setYearFilter(currentYear);
+          }
+
+          if (chartBox) {
+            const label = currentBrandKeyword === "" ? "All brands" : `Brand filter: ${currentBrandKeyword}`;
+            chartBox.innerHTML = `
+              <div class="placeholder-content">
+                <h3>Intensity Dashboard</h3>
+                <p><strong>${label}</strong></p>
+                <p>Showing data for <strong>${currentYear}</strong>.</p>
+                <p>Click a visible point on the map to explore location details and visit counts.</p>
+              </div>
+            `;
+          }
         }
 
         function renderFeatureDetails(feature) {
           if (!feature) return;
 
-          const props = feature.properties;
+          const props = feature.properties || {};
           const coords = feature.geometry.coordinates.slice();
+
+          const locationName = getLocationValue(props);
+          const brand = getBrandValue(props);
+          const visitCounts = getVisitCountsValue(props);
+          const year = getYearValue(props);
 
           clearSelection();
           selectedFeatureId = feature.id;
@@ -372,12 +418,19 @@ function initIntensityTemplate() {
             activePopup.remove();
           }
 
+          map.flyTo({
+            center: coords,
+            zoom: Math.max(map.getZoom(), 13),
+            speed: 0.7,
+            essential: true
+          });
+
           const popupHTML = `
             <div>
-              <h3 style="margin:0 0 6px 0;">${props.location_name || "Unknown location"}</h3>
-              <p style="margin:2px 0;"><strong>Brand:</strong> ${props.brand || "N/A"}</p>
-              <p style="margin:2px 0;"><strong>Visits:</strong> ${Number(props.visit_counts || 0).toLocaleString()}</p>
-              <p style="margin:2px 0;"><strong>Year:</strong> ${props.year}</p>
+              <h3 style="margin:0 0 6px 0;">${locationName}</h3>
+              <p style="margin:2px 0;"><strong>Brand:</strong> ${brand}</p>
+              <p style="margin:2px 0;"><strong>Visit Counts:</strong> ${visitCounts.toLocaleString()}</p>
+              <p style="margin:2px 0;"><strong>Year:</strong> ${year}</p>
             </div>
           `;
 
@@ -391,10 +444,12 @@ function initIntensityTemplate() {
             activePopup = null;
           });
 
-          if (typeof updateIntensityCharts === "function") {
-            updateIntensityCharts(props, chartBox);
+          if (window.IntensityChart) {
+            console.log("Clicked feature:", props);
+            console.log("visit_counts:", visitCounts);
+            window.IntensityChart.updateSelectedFeature(feature);
           } else {
-            console.warn("updateIntensityCharts() not found. Check intensity_chart.js.");
+            console.warn("window.IntensityChart not found. Check intensity_chart.js.");
           }
         }
 
@@ -403,32 +458,14 @@ function initIntensityTemplate() {
           yearValue.textContent = currentYear;
           applyMapFilters();
 
-          if (chartBox) {
-            chartBox.innerHTML = `
-              <div class="placeholder-content">
-                <h3>Intensity Dashboard</h3>
-                <p>Showing data for <strong>${currentYear}</strong>.</p>
-                <p>Click a visible point on the map to explore weekly and hourly traffic patterns.</p>
-              </div>
-            `;
+          if (window.IntensityChart) {
+            window.IntensityChart.setYearFilter(currentYear);
           }
         });
 
         brandFilterInput.addEventListener("input", (e) => {
           currentBrandKeyword = e.target.value.trim();
           applyMapFilters();
-
-          if (chartBox) {
-            const label = currentBrandKeyword === "" ? "All brands" : `Brand filter: ${currentBrandKeyword}`;
-            chartBox.innerHTML = `
-              <div class="placeholder-content">
-                <h3>Intensity Dashboard</h3>
-                <p><strong>${label}</strong></p>
-                <p>Showing data for <strong>${currentYear}</strong>.</p>
-                <p>Click a visible point on the map to explore weekly and hourly traffic patterns.</p>
-              </div>
-            `;
-          }
         });
 
         toggleHeatmap.addEventListener("change", (e) => {
@@ -460,20 +497,8 @@ function initIntensityTemplate() {
           map.setLayoutProperty("foot-traffic-hitbox", "visibility", "visible");
 
           applyMapFilters();
-
-          if (chartBox) {
-            chartBox.innerHTML = `
-              <div class="placeholder-content">
-                <h3>Intensity Dashboard</h3>
-                <p>Filters reset to default.</p>
-                <p>Showing data for <strong>2024</strong>.</p>
-                <p>Click a location on the map to view its details and charts.</p>
-              </div>
-            `;
-          }
         });
 
-        // Click on the invisible large hitbox layer
         map.on("click", "foot-traffic-hitbox", (e) => {
           if (!e.features || !e.features.length) return;
           renderFeatureDetails(e.features[0]);
@@ -493,7 +518,7 @@ function initIntensityTemplate() {
               <h3>Intensity Dashboard</h3>
               <p>Showing data for <strong>${currentYear}</strong>.</p>
               <p>Use the filter panel above the map to refine the display.</p>
-              <p>Click any visible point to open weekly and hourly charts.</p>
+              <p>Click any visible point to open location details and visit-count charts.</p>
             </div>
           `;
         }

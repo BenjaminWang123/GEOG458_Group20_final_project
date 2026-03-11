@@ -1,171 +1,193 @@
 /*
   intensity_chart.js
-  ------------------------------------------------------------------
+  ------------------------------------------------------------
   Purpose:
-  Render the dashboard charts for the intensity page.
+  Build small dashboard charts for the intensity page using
+  visit_counts instead of hourly/weekly arrays.
 
-  This script will:
-  1. Safely parse visits_by_day and visits_by_each_hour
-  2. Build a weekly bar chart
-  3. Build an hourly line chart
-  4. Update the dashboard panel whenever a map point is clicked
+  Features:
+  - selected point summary
+  - top brands by total visits
+  - selected point vs dataset average
 */
 
-// Keep chart instances globally so we can destroy old charts
-let weeklyChartInstance = null;
-let hourlyChartInstance = null;
+window.IntensityChart = (function () {
+  let allFeatures = [];
+  let currentYear = "all";
 
-/*
-  Helper function:
-  GeoJSON properties may sometimes arrive as arrays,
-  and sometimes as JSON strings.
-  This function safely converts them into normal JS arrays.
-*/
-function parseArrayField(value) {
-  if (Array.isArray(value)) return value;
-
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      console.warn("Could not parse array field:", value);
-      return [];
-    }
+  function safeNumber(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
   }
 
-  return [];
-}
+  function getBrand(props) {
+    return (
+      props.brand ||
+      props.Brand ||
+      props.BRAND ||
+      "Unknown"
+    );
+  }
 
-/*
-  Main function:
-  Called by intensity.js after the user clicks a map point.
-*/
-function updateIntensityCharts(props, chartBox) {
-  if (!chartBox) return;
+  function getVisitCounts(props) {
+    return safeNumber(
+      props.visit_counts ??
+      props.VISIT_COUNTS ??
+      props.visits ??
+      props.VISITS ??
+      0
+    );
+  }
 
-  const weeklyData = parseArrayField(props.visits_by_day);
-  const hourlyData = parseArrayField(props.visits_by_each_hour);
+  function getYear(props) {
+    return String(
+      props.year ??
+      props.Year ??
+      props.YEAR ??
+      "Unknown"
+    );
+  }
 
-  const weeklyLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const hourlyLabels = [
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
-    "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"
-  ];
+  function getFilteredFeatures() {
+    if (currentYear === "all") return allFeatures;
+    return allFeatures.filter(
+      (f) => getYear(f.properties) === String(currentYear)
+    );
+  }
 
-  // Replace the dashboard content with info + 2 canvas elements
-  chartBox.innerHTML = `
-    <div class="intensity-panel">
-      <h3>${props.location_name || "Unknown location"}</h3>
-      <p><strong>Brand:</strong> ${props.brand || "N/A"}</p>
-      <p><strong>Address:</strong> ${props.street_address || "N/A"}</p>
-      <p><strong>City:</strong> ${props.city || "N/A"}</p>
-      <p><strong>Visits:</strong> ${Number(props.visit_counts).toLocaleString()}</p>
-      <p><strong>Year:</strong> ${props.year}</p>
+  function buildTopBrands(features, topN = 8) {
+    const totals = {};
 
-      <div style="margin-top:20px;">
-        <h4 style="margin-bottom:10px;">Weekly Pattern</h4>
-        <canvas id="weekly-bar-chart"></canvas>
+    features.forEach((feature) => {
+      const props = feature.properties || {};
+      const brand = getBrand(props);
+      const visits = getVisitCounts(props);
+
+      totals[brand] = (totals[brand] || 0) + visits;
+    });
+
+    return Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, topN);
+  }
+
+  function averageVisits(features) {
+    if (!features.length) return 0;
+    const total = features.reduce((sum, f) => {
+      return sum + getVisitCounts(f.properties || {});
+    }, 0);
+    return total / features.length;
+  }
+
+  function renderEmpty(message = "No data available.") {
+    const panel = document.getElementById("intensity-chart");
+    if (!panel) return;
+
+    panel.innerHTML = `
+      <div class="dashboard-card">
+        <h3>Intensity Dashboard</h3>
+        <p>${message}</p>
       </div>
+    `;
+  }
 
-      <div style="margin-top:24px;">
-        <h4 style="margin-bottom:10px;">Hourly Pattern</h4>
-        <canvas id="hourly-line-chart"></canvas>
+  function renderDashboard(selectedFeature = null) {
+    const panel = document.getElementById("intensity-chart");
+    if (!panel) return;
+
+    const filtered = getFilteredFeatures();
+
+    if (!filtered.length) {
+      renderEmpty("No features available for the current filter.");
+      return;
+    }
+
+    const avgVisits = averageVisits(filtered);
+    const topBrands = buildTopBrands(filtered, 8);
+
+    let selectedHTML = `
+      <div class="dashboard-card">
+        <h3>Selected Location</h3>
+        <p>Click a circle on the map to inspect one location.</p>
       </div>
-    </div>
-  `;
+    `;
 
-  const weeklyCanvas = document.getElementById("weekly-bar-chart");
-  const hourlyCanvas = document.getElementById("hourly-line-chart");
+    if (selectedFeature) {
+      const props = selectedFeature.properties || {};
+      const brand = getBrand(props);
+      const visits = getVisitCounts(props);
+      const year = getYear(props);
 
-  // Destroy previous charts before drawing new ones
-  if (weeklyChartInstance) {
-    weeklyChartInstance.destroy();
+      const higherThanPct = avgVisits > 0
+        ? ((visits / avgVisits) * 100).toFixed(1)
+        : "0.0";
+
+      selectedHTML = `
+        <div class="dashboard-card">
+          <h3>Selected Location</h3>
+          <div class="metric-row"><span>Brand</span><strong>${brand}</strong></div>
+          <div class="metric-row"><span>Visit Counts</span><strong>${visits.toLocaleString()}</strong></div>
+          <div class="metric-row"><span>Year</span><strong>${year}</strong></div>
+          <div class="metric-row"><span>Compared to Avg.</span><strong>${higherThanPct}%</strong></div>
+        </div>
+      `;
+    }
+
+    const maxTopValue = topBrands.length ? topBrands[0][1] : 1;
+
+    const topBrandsHTML = topBrands.map(([brand, value]) => {
+      const width = maxTopValue > 0 ? (value / maxTopValue) * 100 : 0;
+      return `
+        <div class="bar-item">
+          <div class="bar-label-row">
+            <span class="bar-label">${brand}</span>
+            <span class="bar-value">${value.toLocaleString()}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${width}%"></div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const summaryHTML = `
+      <div class="dashboard-card">
+        <h3>Dataset Summary</h3>
+        <div class="metric-row"><span>Visible Locations</span><strong>${filtered.length.toLocaleString()}</strong></div>
+        <div class="metric-row"><span>Average Visit Counts</span><strong>${Math.round(avgVisits).toLocaleString()}</strong></div>
+        <div class="metric-row"><span>Top Brand Groups</span><strong>${topBrands.length}</strong></div>
+      </div>
+    `;
+
+    panel.innerHTML = `
+      <div class="intensity-dashboard-grid">
+        ${selectedHTML}
+        ${summaryHTML}
+        <div class="dashboard-card dashboard-card-wide">
+          <h3>Top Brands by Total Visit Counts</h3>
+          ${topBrandsHTML || "<p>No brand totals available.</p>"}
+        </div>
+      </div>
+    `;
   }
 
-  if (hourlyChartInstance) {
-    hourlyChartInstance.destroy();
+  function setData(features) {
+    allFeatures = Array.isArray(features) ? features : [];
+    renderDashboard();
   }
 
-  // -------------------------------
-  // Weekly bar chart
-  // -------------------------------
-  weeklyChartInstance = new Chart(weeklyCanvas, {
-    type: "bar",
-    data: {
-      labels: weeklyLabels,
-      datasets: [
-        {
-          label: "Visits by Day",
-          data: weeklyData,
-          borderWidth: 1
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          display: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: "Visits"
-          }
-        },
-        x: {
-          title: {
-            display: true,
-            text: "Day of Week"
-          }
-        }
-      }
-    }
-  });
+  function setYearFilter(yearValue) {
+    currentYear = yearValue == null ? "all" : String(yearValue);
+    renderDashboard();
+  }
 
-  // -------------------------------
-  // Hourly line chart
-  // -------------------------------
-  hourlyChartInstance = new Chart(hourlyCanvas, {
-    type: "line",
-    data: {
-      labels: hourlyLabels,
-      datasets: [
-        {
-          label: "Visits by Hour",
-          data: hourlyData,
-          tension: 0.3,
-          fill: false
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: {
-        legend: {
-          display: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: "Visits"
-          }
-        },
-        x: {
-          title: {
-            display: true,
-            text: "Hour of Day"
-          }
-        }
-      }
-    }
-  });
-}
+  function updateSelectedFeature(feature) {
+    renderDashboard(feature);
+  }
+
+  return {
+    setData,
+    setYearFilter,
+    updateSelectedFeature
+  };
+})();
