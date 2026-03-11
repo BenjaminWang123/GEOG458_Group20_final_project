@@ -1,4 +1,4 @@
- /*
+/*
 temporal.js
 --------------------------------------------------
 Temporal map visualization with monthly time slider
@@ -109,8 +109,8 @@ async function initTemporalMap() {
       .filter(k => k.startsWith("dc_"))
       .sort((a,b)=>{
 
-        const [,y1,m1] = a.split("").map(Number);
-        const [_,y2,m2] = b.split("").map(Number);
+        const [_,y1,m1] = a.split("_").map(Number);
+        const [__,y2,m2] = b.split("_").map(Number);
 
         return y1 === y2 ? m1 - m2 : y1 - y2;
 
@@ -249,6 +249,6 @@ function formatTimeKey(key){
     "September","October","November","December"
   ];
 
-  return `${months[+month - 1]} ${year}`;
+  return `${months[+month-1]} ${year}`;
 
 }
