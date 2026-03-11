@@ -1,182 +1,165 @@
 function initCategoryTemplate() {
-  mapboxgl.accessToken = "YOUR_MAPBOX_ACCESS_TOKEN";
-
-  const categories = [
-    "Breakfast",
-    "Lunch",
-    "Dinner",
-    "Take Out and Delivery Only"
-  ];
-
+  const mapBox = document.getElementById("category-map");
   const chartBox = document.getElementById("category-chart");
+  if (!mapBox || !chartBox) return;
+
+  // 1. Initialize Container
+  mapBox.innerHTML = `<div id="real-category-map" style="width:100%; height:100%; min-height:520px; border-radius:20px;"></div>`;
+
+  mapboxgl.accessToken = "YOUR_MAPBOX_ACCESS_TOKEN"; // Replace with your actual token
 
   const map = new mapboxgl.Map({
-    container: "category-map",
-    style: "mapbox://styles/mapbox/light-v11",
-    center: [-122.25, 47.65],
-    zoom: 4
+    container: "real-category-map",
+    style: "mapbox://styles/mapbox/dark-v11", // Dark style matches your UI better
+    center: [-122.33, 47.61],
+    zoom: 9
   });
 
   map.addControl(new mapboxgl.NavigationControl());
 
-  fetch("../data/monthly-patterns-foot-traffic-sample.csv")
-    .then(response => response.text())
-    .then(csvText => {
-      const rows = csvText.trim().split("\n");
-      const headers = rows[0].split("\t");
+  // 2. Load and Parse Data
+  Papa.parse("../data/kc_flow.csv", {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      const raw = results.data;
 
-      const brandIndex = headers.indexOf("brands");
-      const tagsIndex = headers.indexOf("category_tags");
-      const latIndex = headers.indexOf("latitude");
-      const lonIndex = headers.indexOf("longitude");
-      const visitsIndex = headers.indexOf("raw_visit_counts");
+      // Clean and Format Data
+      const data = raw.map(d => ({
+        brand: (d.destination_brand || "Unknown").trim(),
+        category: (d.destination_top_category || "Other").trim(),
+        lon: Number(d.destination_long),
+        lat: Number(d.destination_latitude),
+        visits: Number(d.flow_visits || 0)
+      })).filter(d => !isNaN(d.lon) && !isNaN(d.lat));
 
-      const features = rows.slice(1).map(row => {
-        const cols = row.split("\t");
+      // Generate GeoJSON Features
+      const features = data.map(d => ({
+        type: "Feature",
+        properties: {
+          brand: d.brand,
+          category: d.category,
+          visits: d.visits
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [d.lon, d.lat]
+        }
+      }));
 
-        return {
-          type: "Feature",
-          properties: {
-            brand: cols[brandIndex],
-            tags: cols[tagsIndex],
-            visits: Number(cols[visitsIndex] || 0)
-          },
-          geometry: {
-            type: "Point",
-            coordinates: [
-              Number(cols[lonIndex]),
-              Number(cols[latIndex])
-            ]
-          }
-        };
-      }).filter(feature =>
-        !isNaN(feature.geometry.coordinates[0]) &&
-        !isNaN(feature.geometry.coordinates[1])
-      );
-
-      map.on("load", () => {
-        map.addSource("restaurants", {
-          type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: features
-          }
-        });
-
-        map.addLayer({
-          id: "restaurant-points",
-          type: "circle",
-          source: "restaurants",
-          paint: {
-            "circle-radius": 5,
-            "circle-color": "#ff6b00",
-            "circle-stroke-width": 1,
-            "circle-stroke-color": "#ffffff"
-          }
-        });
-
-        map.on("click", "restaurant-points", e => {
-          const props = e.features[0].properties;
-
-          new mapboxgl.Popup()
-            .setLngLat(e.features[0].geometry.coordinates)
-            .setHTML(`
-              <strong>${props.brand}</strong><br>
-              Tags: ${props.tags}<br>
-              Visits: ${props.visits}
-            `)
-            .addTo(map);
-        });
-
-        map.on("mouseenter", "restaurant-points", () => {
-          map.getCanvas().style.cursor = "pointer";
-        });
-
-        map.on("mouseleave", "restaurant-points", () => {
-          map.getCanvas().style.cursor = "";
-        });
-
-        renderButtons(features);
-        renderChart(features);
-      });
-
-      function renderButtons(allFeatures) {
-        const mapContainer = document.getElementById("category-map");
-
-        const controls = document.createElement("div");
-        controls.style.position = "absolute";
-        controls.style.top = "10px";
-        controls.style.left = "10px";
-        controls.style.zIndex = "2";
-        controls.style.background = "white";
-        controls.style.padding = "10px";
-        controls.style.borderRadius = "8px";
-        controls.style.boxShadow = "0 1px 4px rgba(0,0,0,0.2)";
-
-        const allBtn = document.createElement("button");
-        allBtn.textContent = "All";
-        allBtn.style.marginRight = "6px";
-        allBtn.onclick = () => {
-          map.getSource("restaurants").setData({
-            type: "FeatureCollection",
-            features: allFeatures
+      function render() {
+        // 3. Add Data Source & Layer to Map
+        if (!map.getSource("points")) {
+          map.addSource("points", {
+            type: "geojson",
+            data: { type: "FeatureCollection", features }
           });
-        };
-        controls.appendChild(allBtn);
 
-        categories.forEach(category => {
-          const btn = document.createElement("button");
-          btn.textContent = category;
-          btn.style.marginRight = "6px";
-          btn.style.marginTop = "6px";
+          map.addLayer({
+            id: "points-layer",
+            type: "circle",
+            source: "points",
+            paint: {
+              "circle-radius": [
+                "interpolate", ["linear"], ["zoom"],
+                9, 3,
+                14, 8
+              ],
+              "circle-color": "#3b82f6",
+              "circle-stroke-width": 1,
+              "circle-stroke-color": "#ffffff",
+              "circle-opacity": 0.8
+            }
+          });
 
-          btn.onclick = () => {
-            const filtered = allFeatures.filter(f =>
-              f.properties.tags && f.properties.tags.includes(category)
-            );
+          // Click Popup Logic
+          map.on("click", "points-layer", e => {
+            const p = e.features[0].properties;
+            new mapboxgl.Popup({ className: 'dark-popup' })
+              .setLngLat(e.features[0].geometry.coordinates)
+              .setHTML(`<strong>${p.brand}</strong><br>${p.category}<br>Visits: ${p.visits}`)
+              .addTo(map);
+          });
+        }
 
-            map.getSource("restaurants").setData({
-              type: "FeatureCollection",
-              features: filtered
-            });
-          };
-
-          controls.appendChild(btn);
-        });
-
-        mapContainer.appendChild(controls);
-      }
-
-      function renderChart(allFeatures) {
-        const counts = categories.map(category =>
-          allFeatures.filter(f => f.properties.tags && f.properties.tags.includes(category)).length
-        );
-
+        // 4. Build Dashboard UI
         chartBox.innerHTML = `
-          <h3>Category Counts</h3>
-          <canvas id="categoryBarChart"></canvas>
+          <div style="height:100%; overflow-y:auto; color: white; padding: 10px;">
+            <h3 style="margin-top:0; color: #60a5fa;">Category Explorer</h3>
+            <p style="font-size: 0.9em; opacity: 0.8;">Select a category to filter the map:</p>
+            <div id="category-buttons" style="margin-bottom:20px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
+            <div id="category-results">
+               <p style="font-style: italic; color: #94a3b8;">Click a category to see top brands.</p>
+            </div>
+          </div>
         `;
 
-        const ctx = document.getElementById("categoryBarChart").getContext("2d");
+        const buttonsContainer = document.getElementById("category-buttons");
+        const resultsContainer = document.getElementById("category-results");
 
-        new Chart(ctx, {
-          type: "bar",
-          data: {
-            labels: categories,
-            datasets: [{
-              label: "Number of Locations",
-              data: counts
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                display: false
-              }
+        // Helper to Style Buttons
+        function styleButton(btn) {
+          btn.style.padding = "6px 12px";
+          btn.style.borderRadius = "20px";
+          btn.style.border = "1px solid #3b82f6";
+          btn.style.background = "transparent";
+          btn.style.color = "#60a5fa";
+          btn.style.fontSize = "12px";
+          btn.style.cursor = "pointer";
+          btn.style.transition = "all 0.2s";
+          
+          btn.onmouseover = () => { btn.style.background = "rgba(59, 130, 246, 0.1)"; };
+          btn.onmouseout = () => { if(btn.dataset.active !== "true") btn.style.background = "transparent"; };
+        }
+
+        // Get unique categories from data
+        const categories = [...new Set(data.map(d => d.category))].sort();
+
+        // Add "Show All" Button
+        const allBtn = document.createElement("button");
+        allBtn.textContent = "All Categories";
+        styleButton(allBtn);
+        allBtn.onclick = () => {
+          map.setFilter("points-layer", null);
+          resultsContainer.innerHTML = `<p>Showing all ${data.length} locations.</p>`;
+        };
+        buttonsContainer.appendChild(allBtn);
+
+        // Add Category Buttons
+        categories.forEach(cat => {
+          const btn = document.createElement("button");
+          btn.textContent = cat;
+          styleButton(btn);
+          
+          btn.onclick = () => {
+            // Filter Map
+            map.setFilter("points-layer", ["==", ["get", "category"], cat]);
+
+            // Zoom Map to selection
+            const filtered = data.filter(d => d.category === cat);
+            if (filtered.length > 0) {
+              const bounds = new mapboxgl.LngLatBounds();
+              filtered.forEach(p => bounds.extend([p.lon, p.lat]));
+              map.fitBounds(bounds, { padding: 40, maxZoom: 14 });
             }
-          }
+
+            // Update Brand List in Sidebar
+            const topBrands = [...new Set(filtered.map(d => d.brand))].slice(0, 15);
+            resultsContainer.innerHTML = `
+              <h4 style="margin-bottom:10px; color: #fbbf24;">${cat}</h4>
+              <ul style="padding-left: 0; list-style: none;">
+                ${topBrands.map(b => `<li style="padding: 5px 0; border-bottom: 1px solid #1e293b;">${b}</li>`).join("")}
+              </ul>
+            `;
+          };
+          buttonsContainer.appendChild(btn);
         });
       }
-    });
+
+      if (map.loaded()) render();
+      else map.once("load", render);
+    }
+  });
 }
