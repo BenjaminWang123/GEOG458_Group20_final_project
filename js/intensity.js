@@ -4,12 +4,12 @@
   Purpose:
   Build the Foot Traffic Intensity page inside the shared template.
 
-  Updates:
-  1. Add a large invisible hitbox layer for much easier clicking
-  2. Keep visible circles styled separately from clickable area
-  3. Highlight the selected point after click
-  4. Keep heatmap / points / hitbox filters synced
-  5. Connect map clicks to IntensityChart dashboard
+  Updated behavior:
+  1. Remove click interaction for individual points
+  2. Keep heatmap / point display only for visual reference
+  3. Keep only the ranking dashboard
+  4. Merge former intensity_chart.js logic into this file
+  5. Update ranking dynamically when filters change
 */
 
 function initIntensityTemplate() {
@@ -36,6 +36,11 @@ function initIntensityTemplate() {
 
   mapboxgl.accessToken = "pk.eyJ1IjoiYmVubmk2NjYiLCJhIjoiY21tOHo4eTJoMDBxdDJycTF4cmNuMXo2YSJ9.nJJ5_D3dOefc7feityDgDQ";
 
+  /*
+    ---------------------------------------------------------
+    Create the interactive filter control panel above the map
+    ---------------------------------------------------------
+  */
   const controlWrap = document.createElement("div");
   controlWrap.className = "intensity-control-wrap";
   controlWrap.style.marginBottom = "14px";
@@ -133,7 +138,7 @@ function initIntensityTemplate() {
             </label>
           </div>
           <div style="font-size:12px; opacity:0.8; margin-top:6px;">
-            Keep points on for easier clicking.
+            Points are shown only as visual reference.
           </div>
         </div>
       </div>
@@ -185,34 +190,176 @@ function initIntensityTemplate() {
 
   map.addControl(new mapboxgl.NavigationControl(), "top-right");
 
+  /*
+    Current filter state
+  */
   let currentYear = 2024;
   let currentBrandKeyword = "";
-  let selectedFeatureId = null;
-  let activePopup = null;
+  let allFeatures = [];
 
-  function getBrandValue(props) {
-    return props.brand || props.BRAND || "Unknown brand";
+  /*
+    ---------------------------------------------------------
+    Helper functions
+  */
+  function safeNumber(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
   }
 
-  function getLocationValue(props) {
-    return props.location_name || props.LOCATION_NAME || "Unknown location";
+  function getBrandValue(props) {
+    return (
+      props.brand ||
+      props.Brand ||
+      props.BRAND ||
+      "Unknown brand"
+    );
   }
 
   function getVisitCountsValue(props) {
-    const value = Number(
+    return safeNumber(
       props.visit_counts ??
       props.VISIT_COUNTS ??
       props.visits ??
       props.VISITS ??
       0
     );
-    return Number.isFinite(value) ? value : 0;
   }
 
   function getYearValue(props) {
-    return props.year ?? props.YEAR ?? "Unknown";
+    return String(
+      props.year ??
+      props.Year ??
+      props.YEAR ??
+      "Unknown"
+    );
   }
 
+  /*
+    ---------------------------------------------------------
+    Dashboard logic merged from intensity_chart.js
+    Only keep ranking section
+  */
+  function getFilteredFeaturesForDashboard() {
+    return allFeatures.filter((feature) => {
+      const props = feature.properties || {};
+      const yearMatch = getYearValue(props) === String(currentYear);
+
+      const brand = getBrandValue(props).toLowerCase();
+      const keyword = currentBrandKeyword.trim().toLowerCase();
+      const brandMatch = keyword === "" || brand.includes(keyword);
+
+      return yearMatch && brandMatch;
+    });
+  }
+
+  function buildTopBrands(features, topN = 8) {
+    const totals = {};
+
+    features.forEach((feature) => {
+      const props = feature.properties || {};
+      const brand = getBrandValue(props);
+      const visits = getVisitCountsValue(props);
+
+      totals[brand] = (totals[brand] || 0) + visits;
+    });
+
+    return Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, topN);
+  }
+
+  function renderRankingDashboard() {
+    if (!chartBox) return;
+
+    const filtered = getFilteredFeaturesForDashboard();
+
+    if (!filtered.length) {
+      chartBox.innerHTML = `
+        <div class="dashboard-card">
+          <h3>Top Brands Ranking</h3>
+          <p>No features available for the current filter.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const topBrands = buildTopBrands(filtered, 10);
+    const maxTopValue = topBrands.length ? topBrands[0][1] : 1;
+
+    const topBrandsHTML = topBrands.map(([brand, value], index) => {
+      const width = maxTopValue > 0 ? (value / maxTopValue) * 100 : 0;
+
+      return `
+        <div class="bar-item">
+          <div class="bar-label-row">
+            <span class="bar-label">#${index + 1} ${brand}</span>
+            <span class="bar-value">${value.toLocaleString()}</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${width}%"></div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const filterLabel = currentBrandKeyword.trim() === ""
+      ? "All brands"
+      : `Brand filter: ${currentBrandKeyword}`;
+
+    chartBox.innerHTML = `
+      <div class="dashboard-card dashboard-card-wide">
+        <h3>Top Brands by Total Visit Counts</h3>
+        <p style="margin-top:0; opacity:0.85;">
+          Year: <strong>${currentYear}</strong> · ${filterLabel}
+        </p>
+        ${topBrandsHTML || "<p>No brand totals available.</p>"}
+      </div>
+    `;
+  }
+
+  /*
+    Build map filter expression
+  */
+  function buildFilterExpression() {
+    if (currentBrandKeyword.trim() === "") {
+      return [
+        "any",
+        ["==", ["to-string", ["coalesce", ["get", "year"], ["get", "YEAR"], ""]], String(currentYear)],
+        ["==", ["to-string", ["coalesce", ["get", "Year"], ["get", "YEAR"], ["get", "year"], ""]], String(currentYear)]
+      ];
+    }
+
+    const keyword = currentBrandKeyword.toLowerCase();
+
+    return [
+      "all",
+      [
+        "any",
+        ["==", ["to-string", ["coalesce", ["get", "year"], ["get", "YEAR"], ""]], String(currentYear)],
+        ["==", ["to-string", ["coalesce", ["get", "Year"], ["get", "YEAR"], ["get", "year"], ""]], String(currentYear)]
+      ],
+      [
+        "any",
+        ["in", keyword, ["downcase", ["coalesce", ["get", "brand"], ""]]],
+        ["in", keyword, ["downcase", ["coalesce", ["get", "Brand"], ""]]],
+        ["in", keyword, ["downcase", ["coalesce", ["get", "BRAND"], ""]]]
+      ]
+    ];
+  }
+
+  function applyMapFilters() {
+    const filterExpression = buildFilterExpression();
+
+    map.setFilter("foot-traffic-heat", filterExpression);
+    map.setFilter("foot-traffic-points", filterExpression);
+
+    renderRankingDashboard();
+  }
+
+  /*
+    ---------------------------------------------------------
+    Load data after map is ready
+  */
   map.on("load", () => {
     fetch("../data/seattle_agg_2024_2026_full_clean.geojson")
       .then((response) => {
@@ -230,27 +377,28 @@ function initIntensityTemplate() {
           }
         });
 
-        if (window.IntensityChart) {
-          window.IntensityChart.setData(data.features);
-          window.IntensityChart.setYearFilter(currentYear);
-        }
+        allFeatures = Array.isArray(data.features) ? data.features : [];
+        renderRankingDashboard();
 
         map.addSource("foot-traffic", {
           type: "geojson",
           data: data
         });
 
+        /*
+          Heatmap layer
+        */
         map.addLayer({
           id: "foot-traffic-heat",
           type: "heatmap",
           source: "foot-traffic",
           maxzoom: 15,
-          filter: ["==", ["get", "year"], currentYear],
+          filter: buildFilterExpression(),
           paint: {
             "heatmap-weight": [
               "interpolate",
               ["linear"],
-              ["get", "visit_counts"],
+              ["coalesce", ["get", "visit_counts"], ["get", "VISIT_COUNTS"], 0],
               0, 0,
               50000, 1
             ],
@@ -283,12 +431,15 @@ function initIntensityTemplate() {
           }
         });
 
+        /*
+          Point layer only for visual reference
+        */
         map.addLayer({
           id: "foot-traffic-points",
           type: "circle",
           source: "foot-traffic",
           minzoom: 9,
-          filter: ["==", ["get", "year"], currentYear],
+          filter: buildFilterExpression(),
           paint: {
             "circle-radius": [
               "interpolate",
@@ -297,170 +448,21 @@ function initIntensityTemplate() {
               9, 7,
               14, 11
             ],
-            "circle-color": [
-              "case",
-              ["boolean", ["feature-state", "selected"], false],
-              "#ff7a00",
-              "#ffffff"
-            ],
-            "circle-stroke-color": [
-              "case",
-              ["boolean", ["feature-state", "selected"], false],
-              "#8a3c00",
-              "#2b7bbb"
-            ],
-            "circle-stroke-width": [
-              "case",
-              ["boolean", ["feature-state", "selected"], false],
-              3,
-              1.4
-            ],
+            "circle-color": "#ffffff",
+            "circle-stroke-color": "#2b7bbb",
+            "circle-stroke-width": 1.4,
             "circle-opacity": 0.9
           }
         });
 
-        map.addLayer({
-          id: "foot-traffic-hitbox",
-          type: "circle",
-          source: "foot-traffic",
-          minzoom: 9,
-          filter: ["==", ["get", "year"], currentYear],
-          paint: {
-            "circle-radius": [
-              "interpolate",
-              ["linear"],
-              ["zoom"],
-              9, 18,
-              14, 28
-            ],
-            "circle-color": "#000000",
-            "circle-opacity": 0
-          }
-        }, "foot-traffic-points");
-
-        function buildFilterExpression() {
-          if (currentBrandKeyword.trim() === "") {
-            return ["==", ["get", "year"], currentYear];
-          }
-
-          return [
-            "all",
-            ["==", ["get", "year"], currentYear],
-            [
-              "in",
-              currentBrandKeyword.toLowerCase(),
-              ["downcase", ["coalesce", ["get", "brand"], ""]]
-            ]
-          ];
-        }
-
-        function clearSelection() {
-          if (selectedFeatureId !== null) {
-            map.setFeatureState(
-              { source: "foot-traffic", id: selectedFeatureId },
-              { selected: false }
-            );
-            selectedFeatureId = null;
-          }
-        }
-
-        function applyMapFilters() {
-          const filterExpression = buildFilterExpression();
-
-          map.setFilter("foot-traffic-heat", filterExpression);
-          map.setFilter("foot-traffic-points", filterExpression);
-          map.setFilter("foot-traffic-hitbox", filterExpression);
-
-          clearSelection();
-
-          if (activePopup) {
-            activePopup.remove();
-            activePopup = null;
-          }
-
-          if (window.IntensityChart) {
-            window.IntensityChart.setYearFilter(currentYear);
-          }
-
-          if (chartBox) {
-            const label = currentBrandKeyword === "" ? "All brands" : `Brand filter: ${currentBrandKeyword}`;
-            chartBox.innerHTML = `
-              <div class="placeholder-content">
-                <h3>Intensity Dashboard</h3>
-                <p><strong>${label}</strong></p>
-                <p>Showing data for <strong>${currentYear}</strong>.</p>
-                <p>Click a visible point on the map to explore location details and visit counts.</p>
-              </div>
-            `;
-          }
-        }
-
-        function renderFeatureDetails(feature) {
-          if (!feature) return;
-
-          const props = feature.properties || {};
-          const coords = feature.geometry.coordinates.slice();
-
-          const locationName = getLocationValue(props);
-          const brand = getBrandValue(props);
-          const visitCounts = getVisitCountsValue(props);
-          const year = getYearValue(props);
-
-          clearSelection();
-          selectedFeatureId = feature.id;
-
-          map.setFeatureState(
-            { source: "foot-traffic", id: selectedFeatureId },
-            { selected: true }
-          );
-
-          if (activePopup) {
-            activePopup.remove();
-          }
-
-          map.flyTo({
-            center: coords,
-            zoom: Math.max(map.getZoom(), 13),
-            speed: 0.7,
-            essential: true
-          });
-
-          const popupHTML = `
-            <div>
-              <h3 style="margin:0 0 6px 0;">${locationName}</h3>
-              <p style="margin:2px 0;"><strong>Brand:</strong> ${brand}</p>
-              <p style="margin:2px 0;"><strong>Visit Counts:</strong> ${visitCounts.toLocaleString()}</p>
-              <p style="margin:2px 0;"><strong>Year:</strong> ${year}</p>
-            </div>
-          `;
-
-          activePopup = new mapboxgl.Popup({ offset: 12 })
-            .setLngLat(coords)
-            .setHTML(popupHTML)
-            .addTo(map);
-
-          activePopup.on("close", () => {
-            clearSelection();
-            activePopup = null;
-          });
-
-          if (window.IntensityChart) {
-            console.log("Clicked feature:", props);
-            console.log("visit_counts:", visitCounts);
-            window.IntensityChart.updateSelectedFeature(feature);
-          } else {
-            console.warn("window.IntensityChart not found. Check intensity_chart.js.");
-          }
-        }
-
+        /*
+          -----------------------------------------------------
+          UI interactions
+        */
         yearSlider.addEventListener("input", (e) => {
           currentYear = Number(e.target.value);
           yearValue.textContent = currentYear;
           applyMapFilters();
-
-          if (window.IntensityChart) {
-            window.IntensityChart.setYearFilter(currentYear);
-          }
         });
 
         brandFilterInput.addEventListener("input", (e) => {
@@ -477,9 +479,11 @@ function initIntensityTemplate() {
         });
 
         togglePoints.addEventListener("change", (e) => {
-          const visibility = e.target.checked ? "visible" : "none";
-          map.setLayoutProperty("foot-traffic-points", "visibility", visibility);
-          map.setLayoutProperty("foot-traffic-hitbox", "visibility", visibility);
+          map.setLayoutProperty(
+            "foot-traffic-points",
+            "visibility",
+            e.target.checked ? "visible" : "none"
+          );
         });
 
         resetFiltersBtn.addEventListener("click", () => {
@@ -494,34 +498,9 @@ function initIntensityTemplate() {
 
           map.setLayoutProperty("foot-traffic-heat", "visibility", "visible");
           map.setLayoutProperty("foot-traffic-points", "visibility", "visible");
-          map.setLayoutProperty("foot-traffic-hitbox", "visibility", "visible");
 
           applyMapFilters();
         });
-
-        map.on("click", "foot-traffic-hitbox", (e) => {
-          if (!e.features || !e.features.length) return;
-          renderFeatureDetails(e.features[0]);
-        });
-
-        map.on("mouseenter", "foot-traffic-hitbox", () => {
-          map.getCanvas().style.cursor = "pointer";
-        });
-
-        map.on("mouseleave", "foot-traffic-hitbox", () => {
-          map.getCanvas().style.cursor = "";
-        });
-
-        if (chartBox) {
-          chartBox.innerHTML = `
-            <div class="placeholder-content">
-              <h3>Intensity Dashboard</h3>
-              <p>Showing data for <strong>${currentYear}</strong>.</p>
-              <p>Use the filter panel above the map to refine the display.</p>
-              <p>Click any visible point to open location details and visit-count charts.</p>
-            </div>
-          `;
-        }
       })
       .catch((error) => {
         console.error("Failed to load GeoJSON:", error);
@@ -537,7 +516,7 @@ function initIntensityTemplate() {
           chartBox.innerHTML = `
             <div class="placeholder-content">
               <h3>Dashboard unavailable</h3>
-              <p>The map data could not be loaded, so the dashboard is not ready yet.</p>
+              <p>The map data could not be loaded, so the ranking panel is not ready yet.</p>
             </div>
           `;
         }

@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Temporal Patterns</title>
+  <title>Proportional Circle Map</title>
 
   <link rel="stylesheet" href="../css/style.css" />
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.css" rel="stylesheet" />
-
 </head>
 <body>
 
@@ -15,33 +14,30 @@
 
 <script src="../js/main.js"></script>
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.9.4/mapbox-gl.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="../js/temporal.js"></script>
+<script src="../js/category.js"></script>
 
 <script>
-
 renderMapPage("app", {
-  currentPage: "temporal",
-  pageNumber: "02",
-  title: "Temporal Patterns",
-  subtitle: "Explore how commercial activity changes across time.",
+  currentPage: "category",
+  pageNumber: "03",
+  title: "Proportional Circle Map",
+  subtitle: "Explore individual business locations using circle size to represent visit volume.",
   description:
-    "Use the slider to navigate monthly patterns and explore how commercial activity has changed over time",
+    "This page uses a proportional circle map to show specific business locations. Larger circles represent higher visit counts, making it easier to compare individual places across the city.",
   insights: [
-    "Observe monthly activity changes",
-    "Track activity trends across years",
-    "Identify peak activity areas"
+    "Compare individual locations by visit counts",
+    "See which places generate the largest traffic volumes",
+    "Inspect detailed business information with popups"
   ],
-  toolbar: ["Time", "Patterns", "Legend"],
-  mapId: "temporal-map",
-  panelTitle: "Temporal Dashboard",
-  chartId: "temporal-chart"
+  toolbar: ["Points", "Visit Counts", "Legend"],
+  mapId: "category-map",
+  panelTitle: "Proportional Circle Dashboard",
+  chartId: "category-chart"
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  initTemporalTemplate();
+  initCategoryTemplate();
 });
-
 </script>
 
 </body>
