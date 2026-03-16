@@ -40,8 +40,8 @@ function buildNavbar(currentPage = "home") {
         <nav class="main-nav">
           <a href="${base}index.html" class="nav-link ${currentPage === "home" ? "active" : ""}">Home</a>
           <a href="${base}pages/intensity.html" class="nav-link ${currentPage === "intensity" ? "active" : ""}">Intensity</a>
+          <a href="${base}pages/category.html" class="nav-link ${currentPage === "category" ? "active" : ""}">Brands</a>
           <a href="${base}pages/temporal.html" class="nav-link ${currentPage === "temporal" ? "active" : ""}">Temporal</a>
-          <a href="${base}pages/category.html" class="nav-link ${currentPage === "category" ? "active" : ""}">Category</a>
           <a href="${base}pages/flow.html" class="nav-link ${currentPage === "flow" ? "active" : ""}">Flow</a>
         </nav>
       </div>
@@ -183,16 +183,16 @@ function renderHomePage(targetId) {
               <p>Show hotspots and concentration of commercial activity.</p>
             </a>
 
-            <a href="pages/temporal.html" class="page-card">
-              <span class="page-number">02</span>
-              <h3>Temporal Patterns</h3>
-              <p>Compare how activity changes through time.</p>
-            </a>
-
             <a href="pages/category.html" class="page-card">
               <span class="page-number">03</span>
               <h3>Brand & Category</h3>
               <p>Explore the distribution of commercial types.</p>
+            </a>
+
+            <a href="pages/temporal.html" class="page-card">
+              <span class="page-number">02</span>
+              <h3>Temporal Patterns</h3>
+              <p>Compare how activity changes through time.</p>
             </a>
 
             <a href="pages/flow.html" class="page-card">
