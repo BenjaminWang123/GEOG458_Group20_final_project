@@ -252,3 +252,90 @@ function formatTimeKey(key){
   return `${months[+month-1]} ${year}`;
 
 }
+function addTemporalLegend() {
+
+  const existingLegend = document.getElementById("temporal-legend");
+  const legend = document.createElement("div");
+  legend.id = "temporal-legend";
+  legend.style.cssText = `
+    position: absolute;
+    bottom: 32px;
+    left: 16px;
+    background: white;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-family: sans-serif;
+    font-size: 12px;
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 10;
+    min-width: 160px;
+  `;
+
+  const stops = [
+    { value: "0",      color: "#f7fbff" },
+    { value: "1,000",  color: "#deebf7" },
+    { value: "3,000",  color: "#9ecae1" },
+    { value: "7,000",  color: "#6baed6" },
+    { value: "10,000", color: "#4292c6" },
+    { value: "15,000", color: "#2171b5" },
+    { value: "20,000+",color: "#08519c" },
+  ];
+
+  const gradientColors = stops.map(s => s.color).join(", ");
+
+  legend.innerHTML = `
+    <div style="font-weight: 600; margin-bottom: 10px; font-size: 13px;">
+      Activity Level
+    </div>
+
+    <div style="
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(to right, ${gradientColors});
+      margin-bottom: 6px;
+    "></div>
+
+    <div style="display: flex; justify-content: space-between; color: #666; font-size: 11px; margin-bottom: 12px;">
+      <span>Low</span>
+      <span>High</span>
+    </div>
+
+    <div style="border-top: 1px solid #eee; padding-top: 10px;">
+      ${stops.map(s => `
+        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+          <div style="
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            background: ${s.color};
+            border: 1px solid #ccc;
+            margin-right: 8px;
+            flex-shrink: 0;
+          "></div>
+          <span>${s.value}</span>
+        </div>
+      `).join("")}
+    </div>
+
+    <div style="border-top: 1px solid #eee; padding-top: 10px; margin-top: 4px;">
+      <div style="display: flex; align-items: center;">
+        <div style="
+          width: 14px;
+          height: 14px;
+          border-radius: 3px;
+          background: #e0e0e0;
+          border: 1px solid #ccc;
+          margin-right: 8px;
+          flex-shrink: 0;
+        "></div>
+        <span style="color: #666;">No data</span>
+      </div>
+    </div>
+  `;
+
+  const mapContainer = document.getElementById("temporal-map-container");
+  mapContainer.style.position = "relative";
+  mapContainer.appendChild(legend);
+
+}
