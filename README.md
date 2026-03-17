@@ -46,15 +46,15 @@ This page includes a control panel above the map. The user can:
 - toggle the point reference layer on or off
 - reset all filters with a reset button
 
-These controls allow the map and dashboard to update dynamically based on the selected filters. :contentReference[oaicite:5]{index=5} :contentReference[oaicite:6]{index=6}
+These controls allow the map and dashboard to update dynamically based on the selected filters.
 
 ## Legend
 
-A heatmap legend is included in the control panel. It uses a color gradient from lower intensity to higher intensity so users can interpret how hotspot colors relate to foot traffic concentration. :contentReference[oaicite:7]{index=7}
+A heatmap legend is included in the control panel. It uses a color gradient from lower intensity to higher intensity so users can interpret how hotspot colors relate to foot traffic concentration.
 
 ## Dashboard
 
-The dashboard on this page only keeps the ranking component. It summarizes the top brands by total visit counts after filters are applied. This means the ranking updates dynamically when the user changes the year or enters a brand keyword. :contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9}
+The dashboard on this page only keeps the ranking component. It summarizes the top brands by total visit counts after filters are applied. This means the ranking updates dynamically when the user changes the year or enters a brand keyword.
 
 ## Data Processing Logic
 
@@ -62,7 +62,7 @@ This page reads from the cleaned GeoJSON file:
 
 `../data/seattle_agg_2024_2026_full_clean.geojson`
 
-The script standardizes field access by checking multiple possible property names such as `brand`, `Brand`, `BRAND`, `visit_counts`, `VISIT_COUNTS`, `year`, and `YEAR`. This makes the page more robust when working with slightly inconsistent field names in the dataset. :contentReference[oaicite:10]{index=10} :contentReference[oaicite:11]{index=11}
+The script standardizes field access by checking multiple possible property names such as `brand`, `Brand`, `BRAND`, `visit_counts`, `VISIT_COUNTS`, `year`, and `YEAR`. This makes the page more robust when working with slightly inconsistent field names in the dataset.
 
 ## User Experience Notes
 
@@ -72,7 +72,7 @@ This page is intended for pattern exploration at a city scale. It helps users an
 - How do intensity patterns change across years?
 - Which brands appear most strongly in the filtered results?
 
-Because the map does not support clicking individual points, the emphasis stays on broader spatial intensity and brand ranking rather than detailed store inspection. :contentReference[oaicite:12]{index=12}
+Because the map does not support clicking individual points, the emphasis stays on broader spatial intensity and brand ranking rather than detailed store inspection.
 
 ---
 
@@ -80,11 +80,11 @@ Because the map does not support clicking individual points, the emphasis stays 
 ![Brand Map](imgs/brand.png)
 ## Purpose
 
-The Category page has been redesigned as a proportional circle map. Instead of using category blocks or a previous categorical view, this page now visualizes individual locations as circles whose size reflects visit counts. This makes it easier to compare specific places and inspect detailed location information. :contentReference[oaicite:13]{index=13}
+The Category page has been redesigned as a proportional circle map. Instead of using category blocks or a previous categorical view, this page now visualizes individual locations as circles whose size reflects visit counts. This makes it easier to compare specific places and inspect detailed location information.
 
 ## Main Visualization
 
-The map displays point locations as proportional circles. Larger circles represent higher visit counts, while smaller circles represent lower visit counts. This makes the map useful for direct comparison between individual stores or destinations. :contentReference[oaicite:14]{index=14}
+The map displays point locations as proportional circles. Larger circles represent higher visit counts, while smaller circles represent lower visit counts. This makes the map useful for direct comparison between individual stores or destinations.
 
 ## Interactive Controls
 
@@ -94,11 +94,11 @@ The controls are placed in the shared toolbar area created by the main template.
 - search brands with a text input
 - reset the filters with a reset button
 
-These controls update both the map and the dashboard. :contentReference[oaicite:15]{index=15} :contentReference[oaicite:16]{index=16}
+These controls update both the map and the dashboard.
 
 ## Legend
 
-A proportional circle legend is placed on the map. It explains that circle size represents visit counts and also shows a separate symbol for the currently selected location. This helps users understand both the data scaling and the click-selection behavior. :contentReference[oaicite:17]{index=17}
+A proportional circle legend is placed on the map. It explains that circle size represents visit counts and also shows a separate symbol for the currently selected location. This helps users understand both the data scaling and the click-selection behavior.
 
 ## Click Interaction
 
@@ -108,14 +108,14 @@ Unlike the intensity page, this page supports clicking circles. When the user cl
 - a popup appears with location details
 - the side dashboard updates with the selected location information
 
-This interaction makes the page suitable for more detailed inspection of specific locations. :contentReference[oaicite:18]{index=18}
+This interaction makes the page suitable for more detailed inspection of specific locations.{index=18}
 
 ## Dashboard
 
 The dashboard includes three main parts:
 
 ### Selected Location
-This section shows detailed information for the clicked point, including location name, brand, category, visit counts, and year. If no point is selected, the page prompts the user to click a circle. :contentReference[oaicite:19]{index=19}
+This section shows detailed information for the clicked point, including location name, brand, category, visit counts, and year. If no point is selected, the page prompts the user to click a circle.
 
 ### Dataset Summary
 This section summarizes the currently visible filtered dataset, including:
@@ -129,7 +129,7 @@ This section summarizes the currently visible filtered dataset, including:
 This helps users understand the overall filtered result, not just one selected point. :contentReference[oaicite:20]{index=20}
 
 ### Top Locations by Visit Counts
-This section ranks the top visible locations according to visit counts. It updates dynamically when the brand dropdown or search filter changes. :contentReference[oaicite:21]{index=21}
+This section ranks the top visible locations according to visit counts. It updates dynamically when the brand dropdown or search filter changes.
 
 ## Data Processing Logic
 
@@ -137,11 +137,11 @@ This page also loads data from:
 
 `../data/seattle_agg_2024_2026_full_clean.geojson`
 
-The script filters the dataset to point geometries only and assigns feature IDs where necessary. It also uses helper functions to safely read fields such as brand, category, visit counts, year, and location name from multiple possible property names. :contentReference[oaicite:22]{index=22} :contentReference[oaicite:23]{index=23}
+The script filters the dataset to point geometries only and assigns feature IDs where necessary. It also uses helper functions to safely read fields such as brand, category, visit counts, year, and location name from multiple possible property names.
 
 ## Map Behavior
 
-The page automatically zooms to the filtered results so users can focus on the currently relevant data. After each filter update, the selected circle layer is reset, the dashboard is rebuilt, and the map is resized if needed. This improves the responsiveness of the page and keeps the visual state synchronized with the dashboard. :contentReference[oaicite:24]{index=24}
+The page automatically zooms to the filtered results so users can focus on the currently relevant data. After each filter update, the selected circle layer is reset, the dashboard is rebuilt, and the map is resized if needed. This improves the responsiveness of the page and keeps the visual state synchronized with the dashboard.{index=24}
 
 ## User Experience Notes
 
@@ -151,7 +151,7 @@ This page is intended for location-level comparison and inspection. It helps use
 - How does one brand compare across locations?
 - What details belong to a selected site?
 
-Compared with the heatmap page, this page is better for detailed exploration of individual destinations. :contentReference[oaicite:25]{index=25}
+Compared with the heatmap page, this page is better for detailed exploration of individual destinations.
 
 ---
 
