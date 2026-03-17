@@ -169,6 +169,27 @@ Compared with the heatmap page, this page is better for detailed exploration of 
 
 ---
 
+# Page 4 Flow Map
+
+![Flow Map](imgs/flow.png)
+## Purpose
+This map aims to demonstrate the population flow based on weekly patterns in King County. It used orange and blue points to represent the origin and destination places, with connected lines in different thickness representing different volume. 
+
+## Interactive Controls
+The dahsboard contains toggles that allow users to choose year and week from 2017 to 2026. 
+
+## Legend
+Legend is provided to display essential information, including number of total connections and visitors, and places of origin and destination.
+
+## Data Processing
+[Processed dataset](../data/kc_flows.geojson) was used for this dashboard. It was cleaned from the [the original foot pattern dataset](Uhttps://app.deweydata.io/data/advan/monthly-patterns-foot-traffic-container/monthly-patterns-foot-traffic) from Dewey by choosing King County places and reducing total entries. It was also switched from location-centric to pair of origin and destination. For privacy protection the centroid of CBGs were used as origin of visitors. 
+
+## User Experience
+This page helps users to better understand overall visitor flows in King County, especially beneficial to demographic researchers and tourists. It allows users to see:
+- What is the overall visitor flows in the greater Seattle area?
+- Which specific place receieve large number of visitors?
+- Which time period in a year is there more flows?
+
 ## 3. Limitations and Future Improvements
 
 ### Data Limitations
