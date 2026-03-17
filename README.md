@@ -1,6 +1,12 @@
 # GEOG458_Group20_final_project
 # Commercial Foot Traffic Analysis
 
+### AI Disclosure
+
+I used AI in this assignment for debugging, interface design refinement, and improving code structure and documentation clarity. AI assistance helped with troubleshooting JavaScript interactions, organizing the project layout, and drafting parts of the README file. I did not rely on AI to complete components where independent work was required, and I am able to explain all code, design decisions, and implementations included in this project.
+
+---
+
 ## Live Website
 
 Access the interactive web application here:
