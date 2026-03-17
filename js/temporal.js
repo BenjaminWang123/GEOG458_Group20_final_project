@@ -269,8 +269,8 @@ function addTemporalLegend() {
     </div>
   `;
 
-  const mapContainer = document.getElementById("temporal-map-container");
-  mapContainer.style.position = "relative";
+  const mapContainer = document.getElementById("temporal-map");
+  mapContainer.style.position  on = "relative";
   mapContainer.appendChild(legend);
 
 }
