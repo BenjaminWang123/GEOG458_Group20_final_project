@@ -169,7 +169,7 @@ Compared with the heatmap page, this page is better for detailed exploration of 
 
 ---
 
-# Page 4 Flow Map
+# Page 4: Flow Map
 
 ![Flow Map](imgs/flow.png)
 ## Purpose
@@ -187,7 +187,7 @@ Legend is provided to display essential information, including number of total c
 ## User Experience
 This page helps users to better understand overall visitor flows in King County, especially beneficial to demographic researchers and tourists. It allows users to see:
 - What is the overall visitor flows in the greater Seattle area?
-- Which specific place receieve large number of visitors?
+- Which specific place receive large number of visitors?
 - Which time period in a year is there more flows?
 
 ## 3. Limitations and Future Improvements
