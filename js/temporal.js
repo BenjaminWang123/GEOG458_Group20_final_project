@@ -193,9 +193,6 @@ function addTemporalLegend() {
   const legend = document.createElement("div");
   legend.id = "temporal-legend";
   legend.style.cssText = `
-    position: absolute;
-    bottom: 32px;
-    left: 16px;
     background: white;
     border-radius: 12px;
     padding: 14px 16px;
@@ -203,8 +200,8 @@ function addTemporalLegend() {
     font-size: 12px;
     color: #333;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    z-index: 10;
     min-width: 160px;
+    margin-top: 16px;
   `;
 
   const stops = [
@@ -269,9 +266,8 @@ function addTemporalLegend() {
     </div>
   `;
 
-  const mapContainer = document.getElementById("temporal-map");
-  mapContainer.style.position  on = "relative";
-  mapContainer.appendChild(legend);
+  const chartBox = document.getElementById("temporal-chart");
+  chartBox.appendChild(legend);
 
 }
 
@@ -315,9 +311,9 @@ function updateStats() {
     .map(f => f.properties[key])
     .filter(v => v !== null && !isNaN(v));
 
-  const total = values.reduce((a,b) => a + b, 0);
-  const avg   = total / values.length;
-  const max   = Math.max(...values);
+  const total  = values.reduce((a,b) => a + b, 0);
+  const avg    = total / values.length;
+  const max    = Math.max(...values);
   const active = values.filter(v => v > 0).length;
 
   document.getElementById("temporal-total").textContent  = total.toLocaleString();
