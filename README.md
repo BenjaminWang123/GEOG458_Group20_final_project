@@ -169,7 +169,7 @@ Compared with the heatmap page, this page is better for detailed exploration of 
 
 ---
 # Page 3: Temporal Map (Choropleth Map)
-![Temporal Map](imgs/brand.png)
+![Temporal Map](imgs/temporal.png)
 ## Purpose
 
 The Temporal Patterns page allows users to explore how commercial activity has changed across King County over time. Rather than showing a static snapshot, the page is designed around a monthly time slider that lets users move through a sequence of periods and observe how activity levels shift geographically. It is intended to help users identify peak activity months, track long-term trends, and compare spatial patterns across different times of year.
@@ -184,11 +184,11 @@ The primary control is a time slider rendered beneath the map. Dragging it advan
 
 ## Legend
 
-The current implementation does not include a standalone legend component on the map canvas. Color meaning is communicated implicitly through the gradient — lighter areas represent lower activity and darker blues represent higher activity.
+Ligher colors indicate less footfall, darker blue means more footfall.
 
 ## Click Interaction
 
-Clicking any shaded polygon triggers a Mapbox popup anchored to the clicked coordinate. The popup displays the area name of the area, the numeric ctivity value for the currently active month, and the formatted month-year label. The click handler reads the current time at the moment of the click, so the popup always reflects whichever time period is currently displayed on the map rather than a fixed value.
+Clicking any shaded polygon triggers a Mapbox popup anchored to the clicked coordinate. The popup display the numeric ctivity value for the currently active month and the formatted month-year label. The click handler reads the current time at the moment of the click, so the popup always reflects whichever time period is currently displayed on the map rather than a fixed value.
 
 ## Data Flow and Processing 
 When the page loads, the layout is scaffolded first, then the map is created and the GeoJSON file is fetched from the server. Once the data arrives, the script converts all monthly activity values from strings to numbers and sorts the monthly keys into chronological order. This sorted list becomes the sequence the slider moves through. From this point, all interactions work entirely on the data already in memory, so no further requests are made. When the slider moves, the map's color fill is rebound to the newly selected month's values, the statistics panel recalculates, and the time label updates to match. The data set used is from the original Dewey data set. 
