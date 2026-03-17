@@ -168,6 +168,32 @@ This page is intended for location-level comparison and inspection. It helps use
 Compared with the heatmap page, this page is better for detailed exploration of individual destinations.
 
 ---
+# Page 3: Temporal Map (Choropleth Map)
+![Temporal Map](imgs/brand.png)
+## Purpose
+
+The Temporal Patterns page allows users to explore how commercial activity has changed across King County over time. Rather than showing a static snapshot, the page is designed around a monthly time slider that lets users move through a sequence of periods and observe how activity levels shift geographically. It is intended to help users identify peak activity months, track long-term trends, and compare spatial patterns across different times of year.
+
+## Main Visualization
+
+The map uses a choropleth approach, shading each geographic polygon according to its recorded activity level for the selected month. The color scale runs from near-white for low or zero activity through progressively darker blues up to a deep navy for the highest values. This makes it immediately clear where activity is concentrated and how that concentration changes as the user moves through time.
+
+## Interactive Controls
+
+The primary control is a time slider rendered beneath the map. Dragging it advances or rewinds the selected month, instantly updating both the map colors and the statistics panel. A text label directly below the slider displays the current period in plain language, for example "March 2022," so the user always knows which month is on screen. The statistics panel updates alongside the map and reports four values for the active period: total activity summed across all areas, the per-area average, the single highest recorded value, and a count of how many areas had any activity above zero.
+
+## Legend
+
+The current implementation does not include a standalone legend component on the map canvas. Color meaning is communicated implicitly through the gradient — lighter areas represent lower activity and darker blues represent higher activity.
+
+## Click Interaction
+
+Clicking any shaded polygon triggers a Mapbox popup anchored to the clicked coordinate. The popup displays the area name of the area, the numeric ctivity value for the currently active month, and the formatted month-year label. The click handler reads the current time at the moment of the click, so the popup always reflects whichever time period is currently displayed on the map rather than a fixed value.
+
+## Data Flow and Processing 
+When the page loads, the layout is scaffolded first, then the map is created and the GeoJSON file is fetched from the server. Once the data arrives, the script converts all monthly activity values from strings to numbers and sorts the monthly keys into chronological order. This sorted list becomes the sequence the slider moves through. From this point, all interactions work entirely on the data already in memory, so no further requests are made. When the slider moves, the map's color fill is rebound to the newly selected month's values, the statistics panel recalculates, and the time label updates to match. The data set used is from the original Dewey data set. 
+
+---
 
 # Page 4: Flow Map
 
