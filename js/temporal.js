@@ -67,6 +67,7 @@ function initTemporalTemplate() {
 
       </div>
     </div>
+    <div id="temporal-legend-container"></div>
   `;
 
   initTemporalMap();
@@ -266,8 +267,8 @@ function addTemporalLegend() {
     </div>
   `;
 
-  const chartBox = document.getElementById("temporal-chart");
-  chartBox.appendChild(legend);
+  const legendContainer = document.getElementById("temporal-legend-container");
+  legendContainer.appendChild(legend);
 
 }
 
