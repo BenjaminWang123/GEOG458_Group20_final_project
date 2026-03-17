@@ -104,10 +104,9 @@ async function initTemporalMap() {
     });
 
     /* Extract monthly keys */
-
     timeKeys = Object.keys(temporalData.features[0].properties)
       .filter(k => k.startsWith("dc_"))
-      .sort((a,b)=>{
+      .sort((a,b) => {
 
         const [_,y1,m1] = a.split("_").map(Number);
         const [__,y2,m2] = b.split("_").map(Number);
@@ -127,6 +126,7 @@ async function initTemporalMap() {
     });
 
     addTemporalLayer();
+    addTemporalLegend();
     updateTemporalVisualization();
 
   });
@@ -135,34 +135,34 @@ async function initTemporalMap() {
 
 function addTemporalLayer() {
 
-  temporalMap.addSource(TEMPORAL_SOURCE_ID,{
-    type:"geojson",
+  temporalMap.addSource(TEMPORAL_SOURCE_ID, {
+    type: "geojson",
     data: temporalData
   });
 
   temporalMap.addLayer({
-    id:TEMPORAL_LAYER_ID,
-    type:"fill",
-    source:TEMPORAL_SOURCE_ID,
+    id: TEMPORAL_LAYER_ID,
+    type: "fill",
+    source: TEMPORAL_SOURCE_ID,
 
-    paint:{
-      "fill-color":[
+    paint: {
+      "fill-color": [
         "interpolate",
         ["linear"],
         ["get", timeKeys[0]],
 
-        0,"#f7fbff",
-        1000,"#deebf7",
-        3000,"#c6dbef",
-        5000,"#9ecae1",
-        7000,"#6baed6",
-        10000,"#4292c6",
-        15000,"#2171b5",
-        20000,"#08519c"
+        0,     "#f7fbff",
+        1000,  "#deebf7",
+        3000,  "#c6dbef",
+        5000,  "#9ecae1",
+        7000,  "#6baed6",
+        10000, "#4292c6",
+        15000, "#2171b5",
+        20000, "#08519c"
       ],
 
-      "fill-opacity":0.7,
-      "fill-outline-color":"#ffffff"
+      "fill-opacity": 0.7,
+      "fill-outline-color": "#ffffff"
     }
   });
 
@@ -185,76 +185,11 @@ function addTemporalLayer() {
 
 }
 
-function updateTemporalVisualization(){
-
-  if(!temporalMap) return;
-
-  const key = timeKeys[currentTimeIndex];
-
-  temporalMap.setPaintProperty(
-    TEMPORAL_LAYER_ID,
-    "fill-color",
-    [
-      "interpolate",
-      ["linear"],
-      ["get", key],
-
-      0,"#f7fbff",
-      1000,"#deebf7",
-      3000,"#c6dbef",
-      5000,"#9ecae1",
-      7000,"#6baed6",
-      10000,"#4292c6",
-      15000,"#2171b5",
-      20000,"#08519c"
-    ]
-  );
-
-  document.getElementById("temporal-time-display")
-    .textContent = formatTimeKey(key);
-
-  updateStats();
-
-}
-
-function updateStats(){
-
-  const key = timeKeys[currentTimeIndex];
-
-  const values = temporalData.features
-    .map(f=>f.properties[key])
-    .filter(v=>v!==null && !isNaN(v));
-
-  const total = values.reduce((a,b)=>a+b,0);
-  const avg = total/values.length;
-  const max = Math.max(...values);
-  const active = values.filter(v=>v>0).length;
-
-  document.getElementById("temporal-total").textContent = total.toLocaleString();
-  document.getElementById("temporal-avg").textContent = Math.round(avg).toLocaleString();
-  document.getElementById("temporal-peak").textContent = max.toLocaleString();
-  document.getElementById("temporal-active").textContent = active.toLocaleString();
-
-}
-
-function formatTimeKey(key){
-
-  const parts = key.split("_");
-  const year = parts[1];
-  const month = parts[2];
-
-  const months=[
-    "January","February","March","April",
-    "May","June","July","August",
-    "September","October","November","December"
-  ];
-
-  return `${months[+month-1]} ${year}`;
-
-}
 function addTemporalLegend() {
 
   const existingLegend = document.getElementById("temporal-legend");
+  if (existingLegend) existingLegend.remove();
+
   const legend = document.createElement("div");
   legend.id = "temporal-legend";
   legend.style.cssText = `
@@ -273,13 +208,13 @@ function addTemporalLegend() {
   `;
 
   const stops = [
-    { value: "0",      color: "#f7fbff" },
-    { value: "1,000",  color: "#deebf7" },
-    { value: "3,000",  color: "#9ecae1" },
-    { value: "7,000",  color: "#6baed6" },
-    { value: "10,000", color: "#4292c6" },
-    { value: "15,000", color: "#2171b5" },
-    { value: "20,000+",color: "#08519c" },
+    { value: "0",       color: "#f7fbff" },
+    { value: "1,000",   color: "#deebf7" },
+    { value: "3,000",   color: "#9ecae1" },
+    { value: "7,000",   color: "#6baed6" },
+    { value: "10,000",  color: "#4292c6" },
+    { value: "15,000",  color: "#2171b5" },
+    { value: "20,000+", color: "#08519c" },
   ];
 
   const gradientColors = stops.map(s => s.color).join(", ");
@@ -337,5 +272,73 @@ function addTemporalLegend() {
   const mapContainer = document.getElementById("temporal-map-container");
   mapContainer.style.position = "relative";
   mapContainer.appendChild(legend);
+
+}
+
+function updateTemporalVisualization() {
+
+  if (!temporalMap) return;
+
+  const key = timeKeys[currentTimeIndex];
+
+  temporalMap.setPaintProperty(
+    TEMPORAL_LAYER_ID,
+    "fill-color",
+    [
+      "interpolate",
+      ["linear"],
+      ["get", key],
+
+      0,     "#f7fbff",
+      1000,  "#deebf7",
+      3000,  "#c6dbef",
+      5000,  "#9ecae1",
+      7000,  "#6baed6",
+      10000, "#4292c6",
+      15000, "#2171b5",
+      20000, "#08519c"
+    ]
+  );
+
+  document.getElementById("temporal-time-display")
+    .textContent = formatTimeKey(key);
+
+  updateStats();
+
+}
+
+function updateStats() {
+
+  const key = timeKeys[currentTimeIndex];
+
+  const values = temporalData.features
+    .map(f => f.properties[key])
+    .filter(v => v !== null && !isNaN(v));
+
+  const total = values.reduce((a,b) => a + b, 0);
+  const avg   = total / values.length;
+  const max   = Math.max(...values);
+  const active = values.filter(v => v > 0).length;
+
+  document.getElementById("temporal-total").textContent  = total.toLocaleString();
+  document.getElementById("temporal-avg").textContent    = Math.round(avg).toLocaleString();
+  document.getElementById("temporal-peak").textContent   = max.toLocaleString();
+  document.getElementById("temporal-active").textContent = active.toLocaleString();
+
+}
+
+function formatTimeKey(key) {
+
+  const parts = key.split("_");
+  const year  = parts[1];
+  const month = parts[2];
+
+  const months = [
+    "January","February","March","April",
+    "May","June","July","August",
+    "September","October","November","December"
+  ];
+
+  return `${months[+month - 1]} ${year}`;
 
 }
