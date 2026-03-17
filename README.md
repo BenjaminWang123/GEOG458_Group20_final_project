@@ -6,6 +6,7 @@
 Access the interactive web application here:
 
 [View Project Website](https://benjaminwang123.github.io/GEOG458_Group20_final_project/)
+
 [github link](https://github.com/BenjaminWang123/GEOG458_Group20_final_project)
 
 An interactive geospatial dashboard analyzing commercial mobility patterns using large-scale foot traffic data.
