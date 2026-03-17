@@ -182,7 +182,7 @@ The dahsboard contains toggles that allow users to choose year and week from 201
 Legend is provided to display essential information, including number of total connections and visitors, and places of origin and destination.
 
 ## Data Processing
-[Processed dataset](../data/kc_flows.csc) was used for this dashboard. It was cleaned from the [the original foot pattern dataset](https://app.deweydata.io/data/advan/monthly-patterns-foot-traffic-container/monthly-patterns-foot-traffic) from Dewey by choosing King County places and reducing total entries. It was also switched from location-centric to pair of origin and destination. For privacy protection the centroid of CBGs were used as origin of visitors. 
+[Processed dataset](../data/kc_flows.csv) was used for this dashboard. It was cleaned from the [the original foot pattern dataset](https://app.deweydata.io/data/advan/monthly-patterns-foot-traffic-container/monthly-patterns-foot-traffic) from Dewey by choosing King County places and reducing total entries. It was also switched from location-centric to pair of origin and destination. For privacy protection the centroid of CBGs were used as origin of visitors. 
 
 ## User Experience
 This page helps users to better understand overall visitor flows in King County, especially beneficial to demographic researchers and tourists. It allows users to see:
